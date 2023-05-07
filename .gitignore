@@ -1,0 +1,8 @@
+*.exe
+*.out
+*.app
+*.test
+
+.DS_Store
+encoded.jpeg
+
