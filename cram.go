@@ -51,7 +51,7 @@ func MozJPEG(rgb []byte, width int, height int) ([]byte, error) {
 	}
 	outptr := res[0]
 
-	res, err = encode.Call(ctx, inptr, uint64(width), uint64(height), 3, outptr)
+	res, err = encode.Call(ctx, inptr, uint64(width), uint64(height), outptr)
 	if err != nil {
 		return nil, err
 	}

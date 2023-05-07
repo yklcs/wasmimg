@@ -9,8 +9,7 @@
 extern "C" {
 uint8_t *allocate(size_t size);
 void deallocate(uint8_t *ptr);
-uint64_t encode(uint8_t *img_in, int width, int height, int channels,
-                uint8_t *img_out);
+uint64_t encode(uint8_t *img_in, int width, int height, uint8_t *img_out);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -20,8 +19,7 @@ EMSCRIPTEN_KEEPALIVE
 void deallocate(uint8_t *ptr) { delete[] ptr; }
 
 EMSCRIPTEN_KEEPALIVE
-uint64_t encode(uint8_t *img_in, int width, int height, int channels,
-                uint8_t *img_out) {
+uint64_t encode(uint8_t *img_in, int width, int height, uint8_t *img_out) {
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
   jpeg_create_compress(&cinfo);
@@ -29,7 +27,7 @@ uint64_t encode(uint8_t *img_in, int width, int height, int channels,
   cinfo.err = jpeg_std_error(&jerr);
   cinfo.image_width = width;
   cinfo.image_height = height;
-  cinfo.input_components = channels;
+  cinfo.input_components = 3;
   cinfo.in_color_space = JCS_RGB;
 
   unsigned long buf_size = 0;
