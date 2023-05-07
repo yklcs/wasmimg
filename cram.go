@@ -15,7 +15,9 @@ import (
 var wasm []byte
 
 // MozJPEG returns a JPEG-encoded byte slice compressing rgb.
-func MozJPEG(rgb []byte, width int, height int) ([]byte, error) {
+// The width and height of the original image must be provided,
+// together with the JPEG compression quality (0-100).
+func MozJPEG(rgb []byte, width int, height int, quality int) ([]byte, error) {
 	ctx := context.Background()
 	cfg := wazero.NewRuntimeConfigCompiler()
 	r := wazero.NewRuntimeWithConfig(ctx, cfg)
@@ -51,7 +53,7 @@ func MozJPEG(rgb []byte, width int, height int) ([]byte, error) {
 	}
 	outptr := res[0]
 
-	res, err = encode.Call(ctx, inptr, uint64(width), uint64(height), outptr)
+	res, err = encode.Call(ctx, inptr, uint64(width), uint64(height), uint64(quality), outptr)
 	if err != nil {
 		return nil, err
 	}

@@ -27,7 +27,7 @@ func ExampleMozJPEG() {
 	b := img.Bounds()
 	rgb := imageToRGB(img)
 
-	compressed, err := cram.MozJPEG(rgb, b.Dx(), b.Dy())
+	compressed, err := cram.MozJPEG(rgb, b.Dx(), b.Dy(), 75)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -37,7 +37,7 @@ func ExampleMozJPEG() {
 
 	// Output:
 	// 2585457 bytes raw
-	// 279145 bytes compressed
+	// 199870 bytes compressed
 }
 
 // imageToRGB converts img to a RGB byte slice.
