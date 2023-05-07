@@ -41,7 +41,7 @@ $(BIN): $(SRCDIR)/libjpeg.a main.cpp
 	$(CXX) $(CXXFLAGS) \
 		--no-entry \
 		-sFILESYSTEM=0 \
-		-sTOTAL_MEMORY=536870912 \
+		-sTOTAL_MEMORY=64MB \
 		-sEXPORT_NAME="mozjpeg" \
 		-o $@ \
 		-Wall \
