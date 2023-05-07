@@ -17,7 +17,7 @@ EMCMAKEFLAGS := \
 
 .EXPORT_ALL_VARIABLES:
 
-CXXFLAGS := -O3 -msimd128 -fno-exceptions
+CXXFLAGS := -O3 -fno-exceptions
 CFLAGS := $(CXXFLAGS)
 LDFLAGS := -O3
 
