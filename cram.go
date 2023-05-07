@@ -32,6 +32,7 @@ func MozJPEG(rgb []byte, width int, height int, quality int) ([]byte, error) {
 	}
 
 	alloc := mod.ExportedFunction("allocate")
+	free := mod.ExportedFunction("deallocate")
 	encode := mod.ExportedFunction("encode")
 
 	insize := len(rgb)
@@ -41,6 +42,7 @@ func MozJPEG(rgb []byte, width int, height int, quality int) ([]byte, error) {
 		return nil, err
 	}
 	inptr := res[0]
+	defer free.Call(ctx, inptr)
 
 	ok := mod.Memory().Write(uint32(inptr), rgb)
 	if !ok {
@@ -52,6 +54,7 @@ func MozJPEG(rgb []byte, width int, height int, quality int) ([]byte, error) {
 		return nil, err
 	}
 	outptr := res[0]
+	defer free.Call(ctx, outptr)
 
 	res, err = encode.Call(ctx, inptr, uint64(width), uint64(height), uint64(quality), outptr)
 	if err != nil {
