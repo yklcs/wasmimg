@@ -1,23 +1,21 @@
-// Package cram implements various image compression methods through WASM.
-package cram
+// Package mozjpeg implements image encoding/decoding through MozJPEG compiled to WASM.
+package mozjpeg
 
 import (
 	"context"
-	_ "embed"
 	"errors"
+	"os"
 
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/emscripten"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
+	"github.com/yklcs/cram/codecs"
 )
 
-//go:embed codecs/mozjpeg/mozjpeg.wasm
-var wasm []byte
-
-// MozJPEG returns a JPEG-encoded byte slice compressing rgb.
+// Encode returns a JPEG-encoded byte slice compressing rgb.
 // The width and height of the original image must be provided,
 // together with the JPEG compression quality (0-100).
-func MozJPEG(rgb []byte, width int, height int, quality int) ([]byte, error) {
+func Encode(rgb []byte, width int, height int, quality int) ([]byte, error) {
 	ctx := context.Background()
 	cfg := wazero.NewRuntimeConfigCompiler()
 	r := wazero.NewRuntimeWithConfig(ctx, cfg)
@@ -26,7 +24,8 @@ func MozJPEG(rgb []byte, width int, height int, quality int) ([]byte, error) {
 	emscripten.MustInstantiate(ctx, r)
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
-	mod, err := r.Instantiate(ctx, wasm)
+	modcfg := wazero.NewModuleConfig().WithStderr(os.Stderr).WithStdout(os.Stdout)
+	mod, err := r.InstantiateWithConfig(ctx, codecs.MozJPEGWASM, modcfg)
 	if err != nil {
 		return nil, err
 	}
@@ -62,10 +61,12 @@ func MozJPEG(rgb []byte, width int, height int, quality int) ([]byte, error) {
 	}
 	outsize := res[0]
 
-	outimg, ok := mod.Memory().Read(uint32(outptr), uint32(outsize))
+	tmp, ok := mod.Memory().Read(uint32(outptr), uint32(outsize))
 	if !ok {
 		return nil, errors.New("error reading memory")
 	}
+	outimg := make([]byte, len(tmp))
+	copy(outimg, tmp)
 
 	return outimg, nil
 }
