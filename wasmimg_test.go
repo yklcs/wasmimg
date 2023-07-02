@@ -1,4 +1,4 @@
-package cram_test
+package wasmimg_test
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/yklcs/cram/mozjpeg"
+	"github.com/yklcs/wasmimg/mozjpeg"
 )
 
 //go:embed example.jpeg

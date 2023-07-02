@@ -9,7 +9,7 @@ import (
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/emscripten"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
-	"github.com/yklcs/cram/codecs"
+	"github.com/yklcs/wasmimg/codecs"
 )
 
 // Encode returns a JPEG-encoded byte slice compressing rgb.

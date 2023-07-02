@@ -1,4 +1,4 @@
-module github.com/yklcs/cram
+module github.com/yklcs/wasmimg
 
 go 1.20
 
