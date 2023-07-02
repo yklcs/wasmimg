@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"image"
+	_ "image/jpeg"
 	"io"
 	"os"
 
@@ -14,12 +16,14 @@ import (
 )
 
 // Decode reads JPEG data and returns a RGB-encoded byte slice.
-func Decode(r io.Reader) ([]byte, error) {
+func Decode(r io.Reader) ([]byte, int, int, error) {
 	var jpeg bytes.Buffer
 	_, err := jpeg.ReadFrom(r)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
+
+	c, _, _ := image.DecodeConfig(bytes.NewReader(jpeg.Bytes()))
 
 	ctx := context.Background()
 	cfg := wazero.NewRuntimeConfigCompiler()
@@ -32,7 +36,7 @@ func Decode(r io.Reader) ([]byte, error) {
 	modcfg := wazero.NewModuleConfig().WithStderr(os.Stderr).WithStdout(os.Stdout)
 	mod, err := rt.InstantiateWithConfig(ctx, codecs.MozJPEGWASM, modcfg)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	alloc := mod.ExportedFunction("allocate")
@@ -43,35 +47,35 @@ func Decode(r io.Reader) ([]byte, error) {
 
 	res, err := alloc.Call(ctx, uint64(insize)) // should this be dealloced?
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	inptr := res[0]
 	defer free.Call(ctx, inptr)
 
 	ok := mod.Memory().Write(uint32(inptr), jpeg.Bytes())
 	if !ok {
-		return nil, errors.New("error writing memory")
+		return nil, 0, 0, errors.New("error writing memory")
 	}
 
 	res, err = alloc.Call(ctx, uint64(1)) // since mozjpeg manages its own memory, allocating 1 byte is fine
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	outptr := res[0]
 	defer free.Call(ctx, outptr)
 
 	res, err = decode.Call(ctx, inptr, uint64(insize), outptr)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 	outsize := res[0]
 
 	tmp, ok := mod.Memory().Read(uint32(outptr), uint32(outsize))
 	if !ok {
-		return nil, errors.New("error reading memory")
+		return nil, 0, 0, errors.New("error reading memory")
 	}
 	outimg := make([]byte, len(tmp))
 	copy(outimg, tmp)
 
-	return outimg, nil
+	return outimg, c.Width, c.Height, nil
 }
