@@ -1,8 +1,10 @@
 package mozjpeg
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
 
 	"github.com/tetratelabs/wazero"
@@ -11,18 +13,24 @@ import (
 	"github.com/yklcs/wasmimg/codecs"
 )
 
-// Decode returns a RGB-encoded byte slice decompressing jpeg.
-func Decode(jpeg []byte) ([]byte, error) {
+// Decode reads JPEG data and returns a RGB-encoded byte slice.
+func Decode(r io.Reader) ([]byte, error) {
+	var jpeg bytes.Buffer
+	_, err := jpeg.ReadFrom(r)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
 	cfg := wazero.NewRuntimeConfigCompiler()
-	r := wazero.NewRuntimeWithConfig(ctx, cfg)
-	defer r.Close(ctx)
+	rt := wazero.NewRuntimeWithConfig(ctx, cfg)
+	defer rt.Close(ctx)
 
-	emscripten.MustInstantiate(ctx, r)
-	wasi_snapshot_preview1.MustInstantiate(ctx, r)
+	emscripten.MustInstantiate(ctx, rt)
+	wasi_snapshot_preview1.MustInstantiate(ctx, rt)
 
 	modcfg := wazero.NewModuleConfig().WithStderr(os.Stderr).WithStdout(os.Stdout)
-	mod, err := r.InstantiateWithConfig(ctx, codecs.MozJPEGWASM, modcfg)
+	mod, err := rt.InstantiateWithConfig(ctx, codecs.MozJPEGWASM, modcfg)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +39,7 @@ func Decode(jpeg []byte) ([]byte, error) {
 	free := mod.ExportedFunction("deallocate")
 	decode := mod.ExportedFunction("decode")
 
-	insize := len(jpeg)
+	insize := jpeg.Len()
 
 	res, err := alloc.Call(ctx, uint64(insize)) // should this be dealloced?
 	if err != nil {
@@ -40,7 +48,7 @@ func Decode(jpeg []byte) ([]byte, error) {
 	inptr := res[0]
 	defer free.Call(ctx, inptr)
 
-	ok := mod.Memory().Write(uint32(inptr), jpeg)
+	ok := mod.Memory().Write(uint32(inptr), jpeg.Bytes())
 	if !ok {
 		return nil, errors.New("error writing memory")
 	}

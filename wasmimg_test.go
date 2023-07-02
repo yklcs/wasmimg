@@ -25,13 +25,13 @@ func TestMozjpeg(t *testing.T) {
 	}
 	b := img.Bounds()
 
-	decompressed, err := mozjpeg.Decode(raw)
+	decompressed, err := mozjpeg.Decode(bytes.NewReader(raw))
 	if err != nil {
 		log.Fatalln(err)
 	}
 	t.Logf("%d bytes decompressed\n", len(decompressed))
 
-	compressed, err := mozjpeg.Encode(decompressed, b.Dx(), b.Dy(), 75)
+	compressed, err := mozjpeg.Encode(bytes.NewReader(decompressed), b.Dx(), b.Dy(), 75)
 	if err != nil {
 		log.Fatalln(err)
 	}
