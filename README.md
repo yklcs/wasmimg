@@ -1,5 +1,7 @@
 # wasmimg 🗜️
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/yklcs/wasmimg.svg)](https://pkg.go.dev/github.com/yklcs/wasmimg)
+
 > ⚠️ Work in progress
 
 wasmimg provides image processing in native Go. Mature image libraries are compiled to WASM, then run with [wazero](https://wazero.io) allowing them to be used without CGo.
